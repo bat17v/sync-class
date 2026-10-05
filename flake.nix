@@ -1,5 +1,5 @@
 {
-  description = "Минимальное окружение для изучения Elixir";
+  description = "Elixir + Postgres environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -13,12 +13,29 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         packages = [
-          pkgs.elixir
+          pkgs.beamPackages.elixir_1_18
+          pkgs.postgresql_16
+          pkgs.inotify-tools
+
+          (pkgs.writeShellScriptBin "pg-start" ''
+            export PGDATA="$PWD/.direnv/db"
+            if [ ! -d "$PGDATA" ]; then
+              initdb --auth=trust -U postgres
+              echo "unix_socket_directories = '$PWD/.direnv'" >> "$PGDATA/postgresql.conf"
+            fi
+            pg_ctl -l "$PGDATA/server.log" -o "-k $PWD/.direnv" start
+          '')
+
+          (pkgs.writeShellScriptBin "pg-stop" ''
+            export PGDATA="$PWD/.direnv/db"
+            pg_ctl stop
+          '')
         ];
 
         shellHook = ''
-          echo "Привет! Окружение Elixir готово к работе."
-          elixir --version
+          export PGDATA = "$PWD/.direnv/db"
+
+          echo "Hello! Environment prepared!"
         '';
       };
     };

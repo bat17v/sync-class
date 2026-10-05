@@ -9,7 +9,7 @@ defmodule SyncClass.Application do
   def start(_type, _args) do
     children = [
       SyncClassWeb.Telemetry,
-      # SyncClass.Repo,
+      SyncClass.Repo,
       {DNSCluster, query: Application.get_env(:sync_class, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: SyncClass.PubSub},
       # Start a worker by calling: SyncClass.Worker.start_link(arg)
